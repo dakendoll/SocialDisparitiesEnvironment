@@ -1,0 +1,5 @@
+linearMod <- lm(income~PM_25)
+print(linearMod)
+summary(linearMod)
+plot(income~PM_25)
+abline(linearMod)
