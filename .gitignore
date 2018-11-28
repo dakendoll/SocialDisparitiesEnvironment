@@ -1,0 +1,14 @@
+*.cpg
+*.dbf
+*.prj
+*.sbn
+*.shp
+*.shp.xml
+*.shx
+*.sbx
+*.Rproj
+.DS_Store
+.Rproj.user
+.RData
+.Rhistory
+
