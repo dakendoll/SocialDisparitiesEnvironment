@@ -49,7 +49,12 @@ resids <- pm.income.poly$residuals
 shades <- auto.shading(resids, n=6, cols = brewer.pal(6, 'Greens'))
 choropleth(income.tracts, resids, shades) #map the data with associated colours
 choro.legend(3864000, 1965000, shades) #add a legend (you might need to change the location)
-
 #TODO: measure residuals column, apply Global/Local Moran's I to determine if residuals are significantly spatially clustered
+# talk about how they are spatially clustered
 
 #relationship between income and PM2.5 -> clustered? why -> find some explanatory variable
+
+# p-value null hyp: independent variable does not explain the variability in dependent variable
+# promblem is, large number of points -> high p-value, more likely to reject null; high n drives low p-value
+# low R2 value indicates that with the above -> doesnt really explain relationship btwn variables
+# so there must be something going on at a more local level => GWR
