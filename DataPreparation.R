@@ -47,7 +47,7 @@ shades <- auto.shading(med.income, n=6, cols = brewer.pal(6, 'Oranges'))
 choropleth(income.tracts, med.income, shades) #map the data with associated colours
 choro.legend(3864000, 1965000, shades) #add a legend (you might need to change the location)
 
-#Perfor a spatial intersection on the PM2.5 and Income data
+#Perform a spatial intersection on the PM2.5 and Income data
 pm.income <- intersect(pm25.spatial, income.tracts)
 #observe result
 head(pm.income)

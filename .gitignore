@@ -6,9 +6,11 @@
 *.shp.xml
 *.shx
 *.sbx
+*.qpj
 *.Rproj
 .DS_Store
 .Rproj.user
 .RData
 .Rhistory
+Screen Shot*
 

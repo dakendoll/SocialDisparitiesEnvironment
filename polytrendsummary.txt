@@ -1,0 +1,59 @@
+> summary(lm.1)
+
+Call:
+lm(formula = f.1, data = pm.income.poly)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.0365 -1.3276 -0.1655  1.0912  4.2649 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -189.1896    20.0937  -9.415   <2e-16 ***
+X             -1.3842     0.1599  -8.659   <2e-16 ***
+Y              0.4264     0.3618   1.179    0.239    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.47 on 3352 degrees of freedom
+Multiple R-squared:  0.03015,	Adjusted R-squared:  0.02957 
+F-statistic:  52.1 on 2 and 3352 DF,  p-value: < 2.2e-16
+
+> summary(lm.2)
+
+Call:
+lm(formula = f.2, data = pm.income.poly)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.4556 -0.6322 -0.0293  0.6473  2.1404 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  5.068e+05  8.093e+03  62.626  < 2e-16 ***
+X            9.115e+03  1.096e+02  83.175  < 2e-16 ***
+Y            2.164e+03  1.964e+02  11.019  < 2e-16 ***
+I(X * X)     3.629e+01  4.765e-01  76.145  < 2e-16 ***
+I(Y * Y)    -2.702e+01  2.168e+00 -12.461  < 2e-16 ***
+I(X * Y)    -4.019e+00  1.308e+00  -3.074  0.00213 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.8343 on 3349 degrees of freedom
+Multiple R-squared:  0.688,	Adjusted R-squared:  0.6876 
+F-statistic:  1477 on 5 and 3349 DF,  p-value: < 2.2e-16
+
+> confint(lm.1, level=0.95)
+                   2.5 %      97.5 %
+(Intercept) -228.5868581 -149.792376
+X             -1.6976365   -1.070802
+Y             -0.2828979    1.135669
+> confint(lm.2, level=0.95)
+                    2.5 %        97.5 %
+(Intercept) 490960.917434 522696.052606
+X             8900.592311   9330.346266
+Y             1779.309343   2549.609906
+I(X * X)        35.351121     37.219759
+I(Y * Y)       -31.267385    -22.765589
+I(X * Y)        -6.582125     -1.455057
+> 
