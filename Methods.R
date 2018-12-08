@@ -175,7 +175,7 @@ dat.1st <- SpatialGridDataFrame(grd, data.frame(var1.pred = predict(lm.1, newdat
 
 # Clip the interpolated raster to Texas
 r   <- raster(dat.1st)
-r.m <- mask(r, census.tracts)
+r.m <- raster::mask(r, census.tracts)
 
 # Plot the map
 tm_shape(r.m) + 
@@ -195,7 +195,7 @@ dat.2nd <- SpatialGridDataFrame(grd, data.frame(var1.pred = predict(lm.2, newdat
 
 # Clip the interpolated raster to Texas
 r   <- raster(dat.2nd)
-r.m <- mask(r, census.tracts)
+r.m <- raster::mask(r, census.tracts)
 
 # Plot the map
 tm_shape(r.m) + 
@@ -260,7 +260,7 @@ dat.krg <- krige(f.2, pm.income.poly, grd, dat.fit)
 #dat.krg <- krige( f.1, pmsample, grd, dat.fit)
 # Convert kriged surface to a raster object for clipping
 r <- raster(dat.krg)
-r.m <- mask(r, census.tracts)
+r.m <- raster::mask(r, census.tracts)
 
 # Plot the map
 krg.map <- tm_shape(r.m) + 
@@ -272,18 +272,20 @@ krg.map
 
 # Convert kriged surface to a variance raster object for clipping
 r   <- raster(dat.krg, layer="var1.var")
-r.m <- mask(r, census.tracts)
+r.m <- raster::mask(r, census.tracts)
 
 krg.var.map <- tm_shape(r.m) + 
   tm_raster(n=7, palette ="Reds",
-            title="Variance map \n(in squared ppm)") +tm_shape(pm.income.poly) + tm_dots(size=0) +
+            title="Variance map \n(in squared ppm)") +
+  tm_shape(pm.income.poly) + 
+  tm_dots(size=0) +
   tm_legend(legend.outside=TRUE) + 
   tm_layout(legend.text.size=0.9)
 krg.var.map
 
 # Convert kriged surface to a confidence raster object for clipping
 r   <- sqrt(raster(dat.krg, layer="var1.var")) * 1.96
-r.m <- mask(r, census.tracts)
+r.m <- raster::mask(r, census.tracts)
 
 krg.ci.map <- tm_shape(r.m) + 
   tm_raster(n=7,
@@ -291,3 +293,112 @@ krg.ci.map <- tm_shape(r.m) +
   tm_legend(legend.outside=TRUE) + 
   tm_layout(legend.text.size=0.9)
 krg.ci.map
+
+
+###############INCOME SPATIAL AUTOCORRELATION
+###Create Spatial Neighbourhood Weights Matrix ###
+#queen's neighbour
+pip.nb <- poly2nb(pm.income.poly)
+
+plot(pm.income.poly)
+plot(pip.nb, coordinates(pm.income.poly), add = TRUE, col = "red")
+
+#rooks neighbour
+pip.nb2 <- poly2nb(pm.income.poly, queen = FALSE)
+#Now, create a new map that overlays the rook neighbors file (in yellow) onto the queen neighbors file (in red).
+plot(pm.income.poly, border = "lightgrey")
+plot(pip.nb, coordinates(pm.income.poly), add = TRUE, col = "red")
+plot(pip.nb2, coordinates(pm.income.poly), add = TRUE, col = "yellow", lwd = 2, lty = "dashed")
+
+#Create the spatial weights neighbour list using the queen's case
+pip.lw <- nb2listw(pip.nb, zero.policy = TRUE, style = "W")
+print.listw(pip.lw, zero.policy = TRUE)
+#summary(pip.lw,zero.policy = TRUE)
+#vectors of population densities & private dwelling vacancies 
+Inc <- pm.income.poly$Income
+
+### Global Moran's I Test ###
+#Remember that Moran’s I is a global measure of correlation
+#Again use the PopDen vector
+mi <- moran.test(Inc, pip.lw, zero.policy = TRUE)
+mi
+#Moran I statistic       Expectation          Variance 
+#     0.6824888652     -0.0003553660      0.0001228718
+
+#To contextualize your Moran's I value, retrieve range of potential Moran's I values.
+moran.range <- function(lw) {
+  wmat <- listw2mat(lw)
+  return(range(eigen((wmat + t(wmat))/2)$values))
+}
+mr <- moran.range(pip.lw)
+mr #[1] -1.000000  1.090676
+
+Coords <- cbind(pm.income.poly$X, pm.income.poly$Y)
+bws <- c(1, 1.2, 1.4, 1.6, 1.7, 1.8, 1.9,2,2.5,3,4,6,10)
+library(lctools)
+moran <- moransI.v(Coords, bws, Inc)
+
+#Perform the Z-test
+#You can get the necessary values from your mi object resulting from your Moran's I test above.
+#For example, the Moran's I value is the first value in the output mi, so you call mi$estimate[1] to get the value.
+mi$estimate[1] #0.6824889
+z.i=mi$estimate[1]-mi$estimate[2]/(mi$estimate[3])
+z.i #3.574657
+
+bw <- 6
+mI <- moransI(Coords,bw,Inc)
+moran.table <- matrix(data=NA,nrow=1,ncol=6)
+col.names <- c("Moran's I", "Expected I", "Z resampling", "P-value resampling",
+               "Z randomization", "P-value randomization")
+colnames(moran.table) <- col.names
+moran.table[1,1] <- mI$Morans.I
+moran.table[1,2] <- mI$Expected.I
+moran.table[1,3] <- mI$z.resampling
+moran.table[1,4] <- mI$p.value.resampling
+moran.table[1,5] <- mI$z.randomization
+moran.table[1,6] <- mI$p.value.randomization
+moran.table
+#     Moran's I    Expected I Z resampling P-value resampling Z randomization
+#[1,]  0.670104 -0.0003549876     65.16051                  0         65.1596
+#P-value randomization
+#[1,]                0
+
+### Local Moran's I ###
+lisa.test <- localmoran(Inc, pip.lw)
+lisa.test
+summary(lisa.test)
+lisa.test <- na.omit(lisa.test)
+
+#Create a choropleth map of the LISA values.
+lisa.shades <- auto.shading(c(lisa.test[,1],-lisa.test[,1]),cols=brewer.pal(5,"PRGn"))
+choropleth(pm.income.poly, lisa.test[,1],shading=lisa.shades, main="Local Moran's I for Income", border=NA)
+#legend2.text = expression(paste("LISA ValuesPopulation Density per km"^"2"," in 2016"))
+choro.legend(px='bottomleft', sh=lisa.shades, cex=0.5,fmt="%6.2f", title="LISA Values")
+
+#Create a Moran's I scatterplot
+#Below is a scatterplot of county vote for Obama and its spatial lag
+#(average vote received in neighboring counties). The Moran’s I
+#coefficient is drawn as the slope of the linear relationship between
+#the two. The plot is partitioned into four quadrants: low-low,
+#low-high, high-low and high-high.
+
+sample.inc <- pm.income.poly[sample(1:nrow(pm.income.poly), 280, replace=TRUE),]
+Inc.s <- sample.inc$Income
+pip.nb.s <- poly2nb(sample.inc)
+pip.lw.s <- nb2listw(pip.nb.s, zero.policy = TRUE, style = "W")
+moran.plot(main="Local Moran's I",Inc.s, pip.lw.s, zero.policy=NULL, spChk=NULL, labels=NULL, xlab="Income", 
+           ylab="Spatially Lagged Income", quiet=NULL)
+#moran.plot(main="Local Moran's I",Inc.s, pip.lw.s, zero.policy=TRUE, spChk=NULL, labels=NULL, xlab="Income", 
+#           ylab="Spatially Lagged Income", quiet=NULL)
+#Get P-values from last column of LISA table
+#Below is a plot of Local Moran |z|-scores for the 2008 Presidential
+#Elections. Higher absolute values of z scores (red) indicate the
+#presence of “enclaves”, where the percentage of the vote received
+#by Obama was significantly different from that in neighboring
+#counties.
+p.lisa=lisa.test[,5]
+p.lisa.shades <- auto.shading(c(lisa.test[,5],-lisa.test[,5]),cols=brewer.pal(5,"PRGn"))
+#Create a choropleth map of the LISA P-values.
+choropleth(pm.income.poly,p.lisa,shading = p.lisa.shades, main = "Income LISA P-values", border=NA)
+choro.legend(px='bottomleft', sh=p.lisa.shades, cex=0.5,fmt="%6.2f")
+

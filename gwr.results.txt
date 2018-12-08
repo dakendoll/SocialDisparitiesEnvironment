@@ -1,0 +1,41 @@
+> gwr.model
+Call:
+spgwr::gwr(formula = Income ~ PM2.5, data = int.pm.income.poly, 
+    coords = cbind(int.pm.income.poly$X, int.pm.income.poly$Y), 
+    adapt = GWRbandwidth, hatmatrix = TRUE, se.fit = TRUE)
+Kernel function: gwr.Gauss 
+Adaptive quantile: 0.0007331374 (about 2 of 3195 data points)
+Summary of GWR coefficient estimates at data points:
+                   Min.    1st Qu.     Median    3rd Qu.       Max.  Global
+X.Intercept. -993582.42  -13864.89   31641.69   70864.13  913126.91 31106.9
+PM2.5        -832296.37  -20905.12     342.54   22975.34  881860.85  1342.3
+Number of data points: 3195 
+Effective number of parameters (residual: 2traceS - traceS'S): 928.5264 
+Effective degrees of freedom (residual: 2traceS - traceS'S): 2266.474 
+Sigma (residual: 2traceS - traceS'S): 4911.181 
+Effective number of parameters (model: traceS): 648.8653 
+Effective degrees of freedom (model: traceS): 2546.135 
+Sigma (model: traceS): 4633.621 
+Sigma (ML): 4136.431 
+AICc (GWR p. 61, eq 2.33; p. 96, eq. 4.21): 63912.55 
+AIC (GWR p. 96, eq. 4.22): 62929.17 
+Residual sum of squares: 54666650753 
+Quasi-global R2: 0.7792178 
+
+> results<-as.data.frame(gwr.model$SDF)
+> head(results)
+     sum.w X.Intercept.      PM2.5 X.Intercept._se   PM2.5_se     gwr.e     pred
+0 5.594536     22610.23  1934.5121       109689.57  92041.975  2453.460 24917.54
+1 5.397345     46912.10 -5308.3711        44097.17  11960.594 -4274.866 27314.87
+2 4.682571    -20072.36 41976.5456       291935.20 254397.542  2473.022 28054.98
+3 5.842387     34312.71 -8605.0297       106852.70  90005.229 -1795.564 24088.56
+4 5.435381     34483.40   848.7139        24871.21   6123.535 -3670.129 38070.13
+6 5.180721    -60621.63 91818.9496        73188.18  64294.816  3671.003 43774.00
+   pred.se    localR2 X.Intercept._se_EDF PM2.5_se_EDF pred.se.1
+0 1451.596 0.22940405           116260.09    97555.394  1538.549
+1 1436.011 0.05879573            46738.64    12677.048  1522.030
+2 1624.013 0.15777376           309422.45   269636.243  1721.293
+3 1395.115 0.20742592           113253.30    95396.643  1478.684
+4 1676.574 0.35006571            26361.03     6490.342  1777.002
+6 1548.146 0.29168620            77572.23    68146.148  1640.881
+> 
